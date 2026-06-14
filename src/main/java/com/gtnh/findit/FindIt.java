@@ -10,6 +10,7 @@ import com.gtnh.findit.handler.AdventureBackpackProvider;
 import com.gtnh.findit.handler.BackpackProvider;
 import com.gtnh.findit.handler.DraconicEvolutionProvider;
 import com.gtnh.findit.handler.ForestryStackFilterProvider;
+import com.gtnh.findit.handler.GregTechCoverProvider;
 import com.gtnh.findit.handler.MinecraftProvider;
 import com.gtnh.findit.handler.ProjectRedExplorationProvider;
 import com.gtnh.findit.handler.ThaumcraftProvider;
@@ -93,6 +94,10 @@ public class FindIt {
 
         if (Loader.isModLoaded("Thaumcraft")) {
             this.pluginsList.add(new ThaumcraftProvider());
+        }
+
+        if (this.isGregTechLoaded) {
+            this.pluginsList.add(new GregTechCoverProvider());
         }
 
         this.pluginsList.add(new MinecraftProvider());
