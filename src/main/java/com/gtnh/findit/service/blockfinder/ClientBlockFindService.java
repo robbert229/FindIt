@@ -16,7 +16,6 @@ import com.gtnh.findit.FindItConfig;
 import com.gtnh.findit.FindItNetwork;
 import com.gtnh.findit.fx.BlockHighlighter;
 import com.gtnh.findit.fx.ParticlePosition;
-import com.gtnh.findit.service.itemfinder.FindItemRequest;
 import com.gtnh.findit.util.AbstractStackFinder;
 
 import codechicken.nei.api.API;
@@ -73,8 +72,9 @@ public class ClientBlockFindService extends BlockFindService {
 
         @Override
         protected boolean findStack(ItemStack stack) {
+            // GT covers are items, so block search needs a cover-aware request.
             if (FindIt.isGregTechLoaded() && CoverRegistry.isCover(stack)) {
-                FindItNetwork.CHANNEL.sendToServer(new FindItemRequest(stack));
+                FindItNetwork.CHANNEL.sendToServer(new FindBlockRequest(stack));
                 return true;
             }
 

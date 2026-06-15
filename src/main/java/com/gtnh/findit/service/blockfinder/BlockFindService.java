@@ -5,8 +5,10 @@ import java.util.List;
 
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.ChunkPosition;
+import net.minecraftforge.common.util.ForgeDirection;
 
 import com.gtnh.findit.FindIt;
 import com.gtnh.findit.FindItConfig;
@@ -14,7 +16,10 @@ import com.gtnh.findit.FindItNetwork;
 import com.gtnh.findit.util.WorldUtils;
 
 import cpw.mods.fml.relauncher.Side;
+import gregtech.api.covers.CoverRegistry;
+import gregtech.api.interfaces.tileentity.ICoverable;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
+import gregtech.api.util.GTUtility;
 
 public class BlockFindService {
 
@@ -31,24 +36,33 @@ public class BlockFindService {
         List<ChunkPosition> positions = new ArrayList<>();
         for (TileEntity tileEntity : WorldUtils.getTileEntitiesAround(player, FindItConfig.SEARCH_RADIUS)) {
             try {
-                Block tileBlock = tileEntity.getBlockType();
-
-                if (!request.getBlockToFind().equals(tileBlock)) {
-                    continue;
-                }
-
-                int tileMeta;
-                if (FindIt.isGregTechLoaded() && tileEntity instanceof IGregTechTileEntity gregTech) {
-                    tileMeta = gregTech.getMetaTileID();
-                } else {
-                    tileMeta = tileEntity.getBlockMetadata();
-                }
-
-                if (request.getMetaToFind() == tileMeta) {
-                    positions.add(new ChunkPosition(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord));
-                    if (positions.size() == FindItConfig.MAX_RESPONSE_SIZE) {
-                        break;
+                ItemStack coverToFind = request.getCoverToFind();
+                if (coverToFind != null) {
+                    if (!matchesCover(coverToFind, tileEntity)) {
+                        continue;
                     }
+                } else {
+                    Block tileBlock = tileEntity.getBlockType();
+
+                    if (!request.getBlockToFind().equals(tileBlock)) {
+                        continue;
+                    }
+
+                    int tileMeta;
+                    if (FindIt.isGregTechLoaded() && tileEntity instanceof IGregTechTileEntity gregTech) {
+                        tileMeta = gregTech.getMetaTileID();
+                    } else {
+                        tileMeta = tileEntity.getBlockMetadata();
+                    }
+
+                    if (request.getMetaToFind() != tileMeta) {
+                        continue;
+                    }
+                }
+
+                positions.add(new ChunkPosition(tileEntity.xCoord, tileEntity.yCoord, tileEntity.zCoord));
+                if (positions.size() == FindItConfig.MAX_RESPONSE_SIZE) {
+                    break;
                 }
             } catch (NullPointerException e) {
                 e.printStackTrace();
@@ -56,5 +70,24 @@ public class BlockFindService {
         }
 
         FindItNetwork.CHANNEL.sendTo(new BlockFoundResponse(positions), player);
+    }
+
+    private boolean matchesCover(ItemStack coverToFind, TileEntity tileEntity) {
+        if (!CoverRegistry.isCover(coverToFind) || !(tileEntity instanceof ICoverable coverable)) {
+            return false;
+        }
+
+        for (ForgeDirection side : ForgeDirection.VALID_DIRECTIONS) {
+            if (!coverable.hasCoverAtSide(side)) {
+                continue;
+            }
+
+            ItemStack coverStack = coverable.getCoverItemAtSide(side);
+            if (GTUtility.areStacksEqual(coverToFind, coverStack, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
