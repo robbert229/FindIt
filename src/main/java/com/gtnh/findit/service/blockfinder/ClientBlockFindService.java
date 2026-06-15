@@ -21,7 +21,6 @@ import com.gtnh.findit.util.AbstractStackFinder;
 import codechicken.nei.api.API;
 import codechicken.nei.guihook.GuiContainerManager;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import gregtech.api.covers.CoverRegistry;
 
 public class ClientBlockFindService extends BlockFindService {
 
@@ -72,12 +71,6 @@ public class ClientBlockFindService extends BlockFindService {
 
         @Override
         protected boolean findStack(ItemStack stack) {
-            // GT covers are items, so block search needs a cover-aware request.
-            if (FindIt.isGregTechLoaded() && CoverRegistry.isCover(stack)) {
-                FindItNetwork.CHANNEL.sendToServer(new FindBlockRequest(stack));
-                return true;
-            }
-
             Block block = Block.getBlockFromItem(stack.getItem());
 
             if (block == Blocks.air) {
